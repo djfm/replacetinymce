@@ -38,6 +38,7 @@ class ReplaceTinyMCE extends Module
 		$this->version = '1.0.0';
 		$this->author = 'fmdj';
 		$this->need_instance = 0;
+		$this->bootstrap = true;
 
 		parent::__construct();
 	}
@@ -91,5 +92,46 @@ class ReplaceTinyMCE extends Module
 			->addResource('vendor', 'codemirror', 'htmlmixed.js')
 			->addResource('replacetinymce.js')
 		;
+	}
+
+	public function getContent()
+	{
+		$stylesheetRelativePath = implode(DIRECTORY_SEPARATOR, [
+			$this->context->shop->theme_directory,
+			'css', 'autoload', $this->context->shop->theme_name . '.css'
+		]);
+
+		$stylesheetPath = implode(DIRECTORY_SEPARATOR, [
+			_PS_ALL_THEMES_DIR_,
+			$stylesheetRelativePath
+		]);
+
+		$stylesheetContents = '';
+
+		if (Tools::getValue('saveStylesheetContents') === "1") {
+			$response = array('ok' => false, 'reason' => $this->l('An unspecified error occurred.'));
+
+			$stylesheetContents = Tools::getValue('stylesheetContents');
+
+			if (file_put_contents($stylesheetPath, $stylesheetContents) !== false) {
+				$response = array('ok' => true, 'reason' => $this->l('Stylesheet successfully saved!'));
+			} else {
+				$response = array('ok' => false, 'reason' => $this->l('Could not save stylesheet, weird.'));
+			}
+
+			header('Content-Type: application/json');
+			die(Tools::jsonEncode($response));
+		}
+
+		if (file_exists($stylesheetPath)) {
+			$stylesheetContents = file_get_contents($stylesheetPath);
+		}
+
+		$this->context->smarty->assign(array(
+			'stylesheetContents' => $stylesheetContents,
+			'stylesheetRelativePath' => $stylesheetRelativePath
+		));
+
+		return $this->display(__FILE__, 'configuration.tpl');
 	}
 }
