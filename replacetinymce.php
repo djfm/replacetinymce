@@ -42,9 +42,15 @@ class ReplaceTinyMCE extends Module
 		parent::__construct();
 	}
 
+	private function setupConfiguration()
+	{
+		Configuration::updateValue('PS_USE_HTMLPURIFIER', false);
+		return true;
+	}
+
 	public function install()
 	{
-		return parent::install() && $this->registerHook('displayBackOfficeHeader');
+		return parent::install() && $this->registerHook('displayBackOfficeHeader') && $this->setupConfiguration();
 	}
 
 	private function addResource()
